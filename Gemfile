@@ -23,3 +23,5 @@ group :development do
   gem "error_highlight", ">= 0.4.0", platforms: [:ruby]
 end
 
+
+gem "dockerfile-rails", ">= 1.6", :group => :development
