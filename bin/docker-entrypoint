@@ -1,16 +1,8 @@
 #!/bin/bash
 set -e
 
-# For development check if the gems as installed, if not, then uninstall them.
-if ! [ bundle check ]; then
-    bundle install
-fi
-
 # Remove a potentially pre-existing server.pid for Rails.
 rm -f /myapp/tmp/pids/server.pid
-
-# Yarn - Check Files.
-yarn install --check-files
 
 # Create empty crontab file.
 crontab -l | { cat; echo ""; } | crontab -
