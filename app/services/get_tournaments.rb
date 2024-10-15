@@ -2,18 +2,24 @@ class GetTournaments
 
   attr_reader :result
 
-  def perform
+  def initialize
+    cached_tournaments = $redis.get("tournaments")
+    if cached_tournaments.nil?
+      refresh!
+    else
+      @result = JSON.parse(cached_tournaments)
+    end
+  end
+
+  def refresh!
     fetch_tournament_data
-    build_result
+    cache_tournaments
+    @result = tournaments
   end
 
   private
 
   attr_reader :tournaments
-
-  def build_result
-    @result = tournaments
-  end
 
   def fetch_tournament_data
     @tournaments = []
@@ -40,6 +46,11 @@ class GetTournaments
         end
       end
     end
+  end
+
+  def cache_tournaments
+    $redis.set("tournaments", @tournaments.to_json)
+    $redis.expire("tournaments", 2.hours.to_i)
   end
 
   def parse_date_range(date_string)
