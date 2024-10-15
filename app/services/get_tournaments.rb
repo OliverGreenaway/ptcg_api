@@ -74,7 +74,7 @@ class GetTournaments
   end
 
   def is_tcg_tournament?(cell)
-    true
+    cell.text.include?("TCG")
   end
 
   def clean_text(text)
