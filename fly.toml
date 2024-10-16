@@ -17,21 +17,6 @@ console_command = '/rails/bin/rails console'
   min_machines_running = 1
   processes = ['web']
 
-[checks]
-  [checks.status]
-    port = 3000
-    type = 'http'
-    interval = '10s'
-    timeout = '2s'
-    grace_period = '5s'
-    method = 'GET'
-    path = '/up'
-    protocol = 'http'
-    tls_skip_verify = false
-
-    [checks.status.headers]
-      X-Forwarded-Proto = 'https'
-
 [[vm]]
   memory = '1gb'
   cpu_kind = 'shared'
