@@ -8,6 +8,7 @@ class GetTournaments
       refresh!
     else
       @result = JSON.parse(cached_tournaments)
+      @result[:last_updated_at] = $redis.get("tournaments:last_updated")
     end
   end
 
@@ -51,6 +52,7 @@ class GetTournaments
   def cache_tournaments
     $redis.set("tournaments", @tournaments.to_json)
     $redis.expire("tournaments", 2.hours.to_i)
+    $redis.set("tournaments:last_updated", DateTime.now.iso8601)
   end
 
   def parse_date_range(date_string)
