@@ -7,20 +7,26 @@ class GetTournaments
     if cached_tournaments.nil?
       refresh!
     else
-      @result = JSON.parse(cached_tournaments)
-      @result[:last_updated_at] = $redis.get("tournaments:last_updated")
+      build_result(JSON.parse(cached_tournaments))
     end
   end
 
   def refresh!
     fetch_tournament_data
     cache_tournaments
-    @result = tournaments
+    build_result(tournaments)
   end
 
   private
 
   attr_reader :tournaments
+
+  def build_result(tournaments)
+    @result = {
+      tournaments: cached_tournaments
+      last_updated_at: $redis.get("tournaments:last_updated")
+    }
+  end
 
   def fetch_tournament_data
     @tournaments = []
