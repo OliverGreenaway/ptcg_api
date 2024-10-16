@@ -23,7 +23,7 @@ class GetTournaments
 
   def build_result(tournaments)
     @result = {
-      tournaments: cached_tournaments
+      tournaments: cached_tournaments,
       last_updated_at: $redis.get("tournaments:last_updated")
     }
   end
