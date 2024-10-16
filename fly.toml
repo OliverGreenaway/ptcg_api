@@ -12,10 +12,10 @@ console_command = '/rails/bin/rails console'
 [http_service]
   internal_port = 3000
   force_https = true
-  auto_stop_machines = 'stop'
+  auto_stop_machines = true
   auto_start_machines = true
-  min_machines_running = 0
-  processes = ['app']
+  min_machines_running = 1
+  processes = ['web']
 
 [checks]
   [checks.status]
@@ -42,7 +42,3 @@ console_command = '/rails/bin/rails console'
   # replace with the command you're using to launch your server.
   web = "bin/rails server"
   cron = "supercronic /app/crontab"
-
-# Make sure there's only one `processes` entry under `[[services]]`
-[[services]]
-  processes = ["web"]
