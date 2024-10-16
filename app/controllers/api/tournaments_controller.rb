@@ -3,9 +3,7 @@ class Api::TournamentsController < Api::BaseController
   def index
     service = GetTournaments.new
 
-    render json: {
-      tournaments: service.result
-    }
+    render json: service.result
   end
 
 end
