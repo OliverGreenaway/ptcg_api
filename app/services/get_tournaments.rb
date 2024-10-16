@@ -23,7 +23,7 @@ class GetTournaments
 
   def build_result(tournaments)
     @result = {
-      tournaments: tournaments,
+      tournaments: tournaments.sort_by {|t| t[:start_date] || t["start_date"] },
       last_updated_at: $redis.get("tournaments:last_updated")
     }
   end
