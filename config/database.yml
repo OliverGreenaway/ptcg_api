@@ -9,6 +9,6 @@ development:
 
 production:
   <<: *default
-  database: pycg_api
-  url: <%= ENV["DB_URL"] %>
+  database: ptcg_api
+  url: <%= ENV["DATABASE_URL"] %>
 
