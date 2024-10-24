@@ -1,41 +1,21 @@
-class GetTournaments
+class LoadTournaments
 
-  attr_reader :result
+  attr_reader :success
 
-  def initialize
-    cached_tournaments = $redis.get("tournaments")
-    if cached_tournaments.nil?
-      refresh!
-    else
-      build_result(JSON.parse(cached_tournaments))
-    end
-  end
-
-  def refresh!
+  def perform
     fetch_tournament_data
-    cache_tournaments
-    build_result(tournaments)
   end
 
   private
 
-  attr_reader :tournaments
-
-  def build_result(tournaments)
-    @result = {
-      tournaments: tournaments.sort_by {|t| t[:start_date] || t["start_date"] },
-      last_updated_at: $redis.get("tournaments:last_updated")
-    }
-  end
-
   def fetch_tournament_data
-    @tournaments = []
-
     headers = [:date, :logo, :name, :city, :links]
 
     response = HTTParty.get(DataProviders::Arcanine.tournaments_url)
     doc = Nokogiri::HTML(response)
+
     #Load upcoming events
+    tournaments = []
     doc.css("table#dtUpcomingEvents tbody tr, table#dtPastEvents tbody tr").each do |row|
       working_row = {}
       row.css("td").each_with_index do |cell, i|
@@ -46,19 +26,16 @@ class GetTournaments
           #Handle logo (event_type)
         when :name
           working_row[:name] = cell.css("a").present? ? cell.css("a").text : clean_text(cell.text)
+          working_row[:event_type] = extract_event_type(working_row[:name])
         when :city
           working_row[:location] = cell.text
         when :links
-          tournaments << working_row if is_tcg_tournament?(cell)
+          working_row[:tcg] = is_tcg_tournament?(cell)
         end
       end
+      Tournament.create_or_update(working_row) if working_row[:tcg]
     end
-  end
-
-  def cache_tournaments
-    $redis.set("tournaments", @tournaments.to_json)
-    $redis.expire("tournaments", 2.hours.to_i)
-    $redis.set("tournaments:last_updated", DateTime.now.iso8601)
+    @success = true
   end
 
   def parse_date_range(date_string)
@@ -98,5 +75,18 @@ class GetTournaments
 
   def clean_text(text)
     text.gsub("\n","").strip
+  end
+
+  def extract_event_type(name)
+    types = {
+      "Regional" => :regional,
+      "International" => :international,
+      "World" => :world,
+      "Special" => :special
+    }
+
+    types.keys.each do |type|
+      return types[type] if name.include?(type)
+    end
   end
 end

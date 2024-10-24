@@ -1,9 +1,9 @@
 class Api::TournamentsController < Api::BaseController
 
   def index
-    service = GetTournaments.new
+    tournaments = Tournament.all
 
-    render json: service.result
+    render json: {tournaments: tournaments.collect(&:to_json)}
   end
 
 end
