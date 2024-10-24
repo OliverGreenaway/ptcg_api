@@ -61,8 +61,8 @@ RUN useradd rails --create-home --shell /bin/bash && \
     chown -R rails:rails log tmp
 USER rails:rails
 
-# Entrypoint prepares the database.
-CMD ["/rails/bin/docker-entrypoint"]
+# Prepare database
+RUN bin/rails db:prepare
 
 # Start the server by default, this can be overwritten at runtime
 EXPOSE 3000
