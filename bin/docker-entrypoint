@@ -6,4 +6,5 @@ if [ "${2}" == "server" ]; then
   ./bin/rails db:prepare
 fi
 
+echo "Docker Entrypoint"
 exec "${@}"
