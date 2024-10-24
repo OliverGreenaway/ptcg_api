@@ -38,7 +38,5 @@ module PtcgApi
 
     # Don't generate system test files.
     config.generators.system_tests = nil
-
-    config.cache_store = :redis_cache_store, { url: ENV["REDIS_SERVER_URL"] }
   end
 end
