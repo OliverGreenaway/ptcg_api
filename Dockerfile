@@ -7,15 +7,12 @@ FROM registry.docker.com/library/ruby:$RUBY_VERSION-slim as base
 # Rails app lives here
 WORKDIR /rails
 
-ARG DATABASE_URL
-
 # Set production environment
 ENV RAILS_ENV="production" \
     BUNDLE_DEPLOYMENT="1" \
     BUNDLE_PATH="/usr/local/bundle" \
     BUNDLE_WITHOUT="development" \
-    SECRET_KEY_BASE=1 \
-    DATABASE_URL=${DATABASE_URL}
+    SECRET_KEY_BASE=1
 
 # Throw-away build stage to reduce size of final image
 FROM base as build
