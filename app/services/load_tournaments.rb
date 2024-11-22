@@ -1,41 +1,53 @@
-class LoadTournaments
+class LoadTournaments < Base
 
   attr_reader :success
 
   def perform
-    fetch_tournament_data
+    get_tournament_ids_and_locations
+    create_or_update_tournaments
   end
 
   private
 
-  def fetch_tournament_data
-    headers = [:date, :logo, :name, :city, :links]
+  attr_reader :tournament_ids, :locations_by_id
 
-    response = HTTParty.get(DataProviders::Arcanine.tournaments_url)
-    doc = Nokogiri::HTML(response)
+  def get_tournament_ids_and_locations
+    tournaments_response = HTTParty.get(DataProviders::Arcanine.tournaments_url)
+    doc = Nokogiri::HTML(tournaments_response)
+    @tournament_ids = doc.css("a:contains('TCG')").collect { |e| e.attributes["href"].value.split('/')[2] }
 
-    #Load upcoming events
-    tournaments = []
-    doc.css("table#dtUpcomingEvents tbody tr, table#dtPastEvents tbody tr").each do |row|
-      working_row = {}
-      row.css("td").each_with_index do |cell, i|
-        case headers[i]
-        when :date
-          working_row.merge!(parse_date_range(cell.text))
-        when :logo
-          #Handle logo (event_type)
-        when :name
-          working_row[:name] = cell.css("a").present? ? cell.css("a").text : clean_text(cell.text)
-          working_row[:event_type] = extract_event_type(working_row[:name])
-        when :city
-          working_row[:location] = cell.text
-        when :links
-          working_row[:tcg] = is_tcg_tournament?(cell)
-        end
-      end
-      Tournament.create_or_update(working_row) if working_row[:tcg]
+    @locations_by_id = {}
+    tournament_ids.each do |tournament_id|
+      locations_by_id[tournament_id] = doc.css("a[href*='#{tournament_id}']").first.parent.parent.css("td")[3].text
     end
-    @success = true
+  end
+
+  def create_or_update_tournaments
+    @tournament_ids.each do |tournament_id|
+      tournament_response = HTTParty.get(DataProviders::Arcanine.tournament_url(tournament_id))
+      doc = Nokogiri::HTML(tournament_response)
+
+      name = doc.css("h3").first.text.split("\n").first
+      event_type = extract_event_type(name)
+      location = locations_by_id[tournament_id]
+      event_dates = parse_date_range(clean_text((doc.css("dt:contains('Event dates')") + doc.css("dt:contains('Dates')")).first.next.next.text))
+      starts_at = DateTime.parse(clean_text(doc.css("dt:contains('Tournament start')").first.next.next.text).split("Junior").first.strip)
+      ends_at = event_dates[:end_date].to_datetime.change(:offset => starts_at.zone).end_of_day
+
+      Tournament.create_or_update(
+        name: name,
+        event_type: event_type,
+        location: location,
+        start_date: starts_at,
+        end_date: ends_at,
+        provider: DataProviders::Arcanine.provider_id,
+        provider_identifier: tournament_id
+      )
+    end
+  end
+
+  def clean_text(text)
+    text.gsub("\n","").strip
   end
 
   def parse_date_range(date_string)
@@ -69,14 +81,6 @@ class LoadTournaments
     }
   end
 
-  def is_tcg_tournament?(cell)
-    cell.text.include?("TCG")
-  end
-
-  def clean_text(text)
-    text.gsub("\n","").strip
-  end
-
   def extract_event_type(name)
     types = {
       "Regional" => :regional,
@@ -89,4 +93,5 @@ class LoadTournaments
       return types[type] if name.include?(type)
     end
   end
+
 end
