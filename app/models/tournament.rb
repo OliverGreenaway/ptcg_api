@@ -1,18 +1,15 @@
 class Tournament < ApplicationRecord
 
+  IMMUTABLE_ATTRIBUTES = []
+
   def self.create_or_update(attributes)
-    identifier = build_identifier(
-      city: process_city(attributes[:location]),
-      event_type: attributes[:event_type],
-      season: process_season(attributes[:name], attributes[:end_date])
-    )
-    if tournament = Tournament.find_by(identifier: identifier)
+    if tournament = Tournament.find_by(provider: attributes[:provider], provider_identifier: attributes[:provider_identifier])
       tournament.update(
-        attributes_to_tournament(attributes, identifier)
+        attributes_to_tournament(attributes)
       )
     else
       Tournament.create(
-        attributes_to_tournament(attributes, identifier)
+        attributes_to_tournament(attributes)
       )
     end
   end
@@ -32,14 +29,6 @@ class Tournament < ApplicationRecord
 
   private
 
-  def self.build_identifier(city:, event_type:, season:)
-    "#{city.downcase}-#{event_type}-#{season}"
-  end
-
-  def self.process_city(location)
-    location.split(',')[0].split('-')[0].strip.gsub(".","").gsub(" ","-")
-  end
-
   def self.process_season(name, fallback_date)
     numbers = name.delete("^0-9")
     if numbers.length == 4
@@ -51,18 +40,17 @@ class Tournament < ApplicationRecord
     end
   end
 
-  def self.attributes_to_tournament(attributes, identifier)
+  def self.attributes_to_tournament(attributes)
     {
       name: attributes[:name],
       location: attributes[:location],
       status: "Unknown",
-      identifier: identifier,
       event_type: attributes[:event_type],
       season: process_season(attributes[:name], attributes[:end_date]),
       starts_at: attributes[:start_date],
       ends_at: attributes[:end_date],
-      provider_identifier: "?????",
-      provider: "rk9"
+      provider_identifier: attributes[:provider_identifier],
+      provider: attributes[:provider]
     }
   end
 
