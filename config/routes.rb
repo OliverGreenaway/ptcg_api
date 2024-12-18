@@ -5,6 +5,10 @@ Rails.application.routes.draw do
 
   namespace :api do
     resources :tournaments, only: [:index]
+
+    namespace :admin do
+      resources :tournaments, only: [:index]
+    end
   end
 
   devise_for :users, path: "", skip: [:session, :api]
