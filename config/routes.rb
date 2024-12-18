@@ -7,7 +7,7 @@ Rails.application.routes.draw do
     resources :tournaments, only: [:index, :show]
 
     namespace :admin do
-      resources :tournaments, only: [:index, :show, :update]
+      resources :tournaments, only: [:update]
     end
   end
 
