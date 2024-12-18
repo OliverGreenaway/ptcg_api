@@ -17,6 +17,7 @@ gem "nokogiri"
 gem "tzinfo-data", platforms: %i[ mswin mswin64 mingw x64_mingw jruby ]
 
 gem "devise"
+gem 'devise-api'
 gem "jsonapi-serializer"
 
 group :development, :test do
