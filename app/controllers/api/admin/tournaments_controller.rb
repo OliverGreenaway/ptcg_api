@@ -3,4 +3,20 @@ class Api::Admin::TournamentsController < Api::Admin::BaseController
       tournaments = Tournament.all
       render json: {tournaments: tournaments.collect(&:to_json)}
     end
+
+    def show
+      tournament = Tournament.find(parmas[:tournament_id])
+      render json: { tournament: tournament.to_json }
+    end
+
+    def update
+      tournament = Tournament.find(parmas[:tournament_id])
+      tournament.update(tournament_params.merge(admin_updated_at: Time.now))
+    end
+
+    private
+
+    def tournament_params
+      params.require(:tournament).permit(:name)
+    end
 end
