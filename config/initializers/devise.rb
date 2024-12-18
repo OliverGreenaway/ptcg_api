@@ -83,7 +83,7 @@ Devise.setup do |config|
 
   config.api.configure do |api|
     # Access Token
-    api.access_token.expires_in = 1.hour
+    api.access_token.expires_in = 2.minutes
     api.access_token.expires_in_infinite = ->(_resource_owner) { false }
     api.access_token.generator = ->(_resource_owner) { Devise.friendly_token(60) }
 
