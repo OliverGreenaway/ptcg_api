@@ -10,9 +10,25 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_10_18_021516) do
+ActiveRecord::Schema[7.1].define(version: 2024_12_18_021027) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "devise_api_tokens", force: :cascade do |t|
+    t.string "resource_owner_type", null: false
+    t.bigint "resource_owner_id", null: false
+    t.string "access_token", null: false
+    t.string "refresh_token"
+    t.integer "expires_in", null: false
+    t.datetime "revoked_at"
+    t.string "previous_refresh_token"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["access_token"], name: "index_devise_api_tokens_on_access_token"
+    t.index ["previous_refresh_token"], name: "index_devise_api_tokens_on_previous_refresh_token"
+    t.index ["refresh_token"], name: "index_devise_api_tokens_on_refresh_token"
+    t.index ["resource_owner_type", "resource_owner_id"], name: "index_devise_api_tokens_on_resource_owner"
+  end
 
   create_table "tournaments", force: :cascade do |t|
     t.string "name"
@@ -27,6 +43,16 @@ ActiveRecord::Schema[7.1].define(version: 2024_10_18_021516) do
     t.string "provider"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "admin_updated_at"
+  end
+
+  create_table "users", force: :cascade do |t|
+    t.string "email", default: "", null: false
+    t.string "encrypted_password", default: "", null: false
+    t.datetime "remember_created_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["email"], name: "index_users_on_email", unique: true
   end
 
 end

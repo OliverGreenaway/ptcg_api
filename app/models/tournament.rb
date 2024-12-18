@@ -1,11 +1,15 @@
 class Tournament < ApplicationRecord
 
-  IMMUTABLE_ATTRIBUTES = []
+  ADMIN_IMMUTABLE_ATTRIBUTES = [:name, :season]
 
   def self.create_or_update(attributes)
     if tournament = Tournament.find_by(provider: attributes[:provider], provider_identifier: attributes[:provider_identifier])
+      update_attrs = attributes_to_tournament(attributes)
+      if tournament.admin_updated_at
+        update_attrs = update_attrs.except(ADMIN_IMMUTABLE_ATTRIBUTES)
+      end
       tournament.update(
-        attributes_to_tournament(attributes)
+        update_attrs
       )
     else
       Tournament.create(
