@@ -58,7 +58,7 @@ COPY --from=build /rails /rails
 
 # Run and own only the runtime files as a non-root user for security
 RUN useradd rails --create-home --shell /bin/bash && \
-    chown -R rails:rails log tmp
+    chown -R rails:rails log tmp db
 USER rails:rails
 
 # Start the server by default, this can be overwritten at runtime
