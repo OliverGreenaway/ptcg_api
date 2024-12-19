@@ -8,6 +8,9 @@ Rails.application.routes.draw do
 
     namespace :admin do
       resources :tournaments, only: [:update]
+      resource :data, only: [] do
+        post :reset, as: :reset
+      end
     end
   end
 
