@@ -48,7 +48,7 @@ class Tournament < ApplicationRecord
     {
       name: attributes[:name],
       location: attributes[:location],
-      status: "Unknown",
+      status: attributes[:status],
       event_type: attributes[:event_type],
       season: process_season(attributes[:name], attributes[:end_date]),
       starts_at: attributes[:start_date],

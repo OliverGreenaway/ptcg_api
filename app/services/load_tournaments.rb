@@ -9,7 +9,7 @@ class LoadTournaments < Base
 
   private
 
-  attr_reader :tournament_ids, :locations_by_id
+  attr_reader :tournament_ids, :locations_by_id, :status_by_id
 
   def get_tournament_ids_and_locations
     tournaments_response = HTTParty.get(DataProviders::Arcanine.tournaments_url)
@@ -17,9 +17,14 @@ class LoadTournaments < Base
     @tournament_ids = doc.css("a:contains('TCG')").collect { |e| e.attributes["href"].value.split('/')[2] }
 
     @locations_by_id = {}
+    @status_by_id = {}
     tournament_ids.each do |tournament_id|
       locations_by_id[tournament_id] = doc.css("a[href*='#{tournament_id}']").first.parent.parent.css("td")[3].text
+
+      section = doc.css("a[href*='#{tournament_id}']").first.parent.parent.parent.parent.parent.parent.parent.css("h4")[0].text
+      status_by_id[tournament_id] = calculate_status(section, tournament_id)
     end
+
   end
 
   def create_or_update_tournaments
@@ -33,6 +38,7 @@ class LoadTournaments < Base
       event_dates = parse_date_range(clean_text((doc.css("dt:contains('Event dates')") + doc.css("dt:contains('Dates')")).first.next.next.text))
       starts_at = DateTime.parse(clean_text(doc.css("dt:contains('Tournament start')").first.next.next.text).split("Junior").first.strip)
       ends_at = event_dates[:end_date].to_datetime.change(:offset => starts_at.zone).end_of_day
+      status = status_by_id[tournament_id]
 
       Tournament.create_or_update(
         name: name,
@@ -41,9 +47,26 @@ class LoadTournaments < Base
         start_date: starts_at,
         end_date: ends_at,
         provider: DataProviders::Arcanine.provider_id,
-        provider_identifier: tournament_id
+        provider_identifier: tournament_id,
+        status: status
       )
     end
+  end
+
+  def calculate_status(section, tournament_id)
+    return "finished" if section == "Past Pokémon Events"
+
+    roster_response = HTTParty.get(DataProviders::Arcanine.roster_url(tournament_id))
+    doc = Nokogiri::HTML(roster_response)
+    check_in_open = doc.css("#dtLiveRoster tbody").first.children.count > 1
+
+    return "upcoming" unless check_in_open
+
+    pairing_response = HTTParty.get(DataProviders::Arcanine.pairings_url(tournament_id))
+    doc = Nokogiri::HTML(pairing_response)
+    tournament_running = doc.css(".tab-content.pt-2.px-3").first.children.count > 0
+
+    tournament_running ? "running" : "check-in"
   end
 
   def clean_text(text)
